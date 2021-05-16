@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <title>landing</title>
+    <style>
+        .app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+    
+</head>
+
+<body>
+    <div class="flex w-screen h-screen justify-center items-center">
+        <div class="text-center ">
+            <h1 class="mb-10 text-5xl  text-blue-400 font-medium">Wellcome to Zoomfy</h1>
+            <a class="py-1 px-2 mx-auto w-1/2 bg-blue-400 text-xl text-white rounded-sm block mb-6" href="/createRoom">Create Room</a>
+            <input id="copiedRoomId" class="border border-blue-400 rounded-sm p-1 outline-none" type="text">
+            <button class="py-1 px-3 bg-blue-400 text-white rounded-sm ml-2" id="join">join</button>
+        </div>
+
+    </div>
+    <script >
+        const join = document.getElementById('join');
+        const copiedRoomId = document.getElementById('copiedRoomId');
+        
+        join.addEventListener('click',() =>{
+            if (copiedRoomId.value != "") {
+                window.location.href = copiedRoomId.value;
+            }else alert("Please enter the room id")
+            
+        })
+    </script>
+</body>
+
+</html>
