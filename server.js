@@ -1,32 +1,37 @@
-const express = require('express')
-const app = express()
-const server = require('http').Server(app)
-const io = require('socket.io')(server)
-const { v4: uuidV4 } = require('uuid')
+const app = require("express")();
+const server = require("http").createServer(app);
+const cors = require("cors");
 
-app.set('view engine', 'ejs')
-app.use(express.static('public'))
+const io = require("socket.io")(server, {
+	cors: {
+		origin: "*",
+		methods: [ "GET", "POST" ]
+	}
+});
+
+app.use(cors());
+
+
+const PORT = 5000;
 
 app.get('/', (req, res) => {
-  res.render('landing')
-})
-app.get('/createRoom', (req, res) => {
-  res.redirect(`/${uuidV4()}`)
+	res.send('Running');
+});
 
-})
-app.get('/:room', (req, res) => {
-  res.render('room', { roomId: req.params.room })
-})
+io.on("connection", (socket) => {
+	socket.emit("me", socket.id);
 
-io.on('connection', socket => {
-  socket.on('join-room', (roomId, userId) => {
-    socket.join(roomId)
-    socket.to(roomId).broadcast.emit('user-connected', userId)
+	socket.on("disconnect", () => {
+		socket.broadcast.emit("callEnded")
+	});
 
-    socket.on('disconnect', () => {
-      socket.to(roomId).broadcast.emit('user-disconnected', userId)
-    })
-  })
-})
+	socket.on("callUser", ({ userToCall, signalData, from, name }) => {
+		io.to(userToCall).emit("callUser", { signal: signalData, from, name });
+	});
 
-server.listen(3000)
+	socket.on("answerCall", (data) => {
+		io.to(data.to).emit("callAccepted", data.signal)
+	});
+});
+
+server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
