@@ -1,24 +1,27 @@
 const express = require('express')
-const app = express()
-const server = require('http').Server(app)
-const io = require('socket.io')(server)
-const { v4: uuidV4 } = require('uuid')
-var username =""
+var app = express();
+var http = require('http');
+var server = http.createServer(app);
+var io = require('socket.io').listen(server);
+const {v4: uuidV4} = require('uuid')
+var username=""
+app.set('view engine', 'ejs') // Tell Express we are using EJS
+app.use(express.static('public')) // Tell express to pull the client script from the public folder
 
-app.set('view engine', 'ejs')
-app.use(express.static('public'))
 
-app.get('/', (req, res) => {
-  res.render('landing')
-})
-app.get('/createRoom/:username', (req, res) => {
+app.set("view engine", "ejs");
+
+app.get("/", (req, rsp) => {
+  rsp.render("landing.ejs");
+});
+app.get("/createRoom/:username", (req, rsp) => {
   username = req.params.username
-  res.redirect(`/${uuidV4()}`)
+  rsp.redirect(`/${uuidV4()}`);
+});
 
-})
-app.get('/:room', (req, res) => {
-  res.render('room', { roomId: req.params.room })
-})
+app.get("/:room", (req, res) => {
+  res.render("room", { roomId: req.params.room, userName: username });
+});
 
 io.on('connection', socket => {
   socket.on('join-room', (roomId, userId) => {
@@ -31,4 +34,4 @@ io.on('connection', socket => {
   })
 })
 
-server.listen(3030)
+server.listen(process.env.PORT || 3000);

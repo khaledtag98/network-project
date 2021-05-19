@@ -3,19 +3,14 @@ const chatInputBox = document.getElementById("chat_message");
 const all_messages = document.getElementById("all_messages");
 const main__chat__window = document.getElementById("main__chat__window");
 const videoGrid = document.getElementById("video-grid");
+const leavemeeting = document.getElementById("leave-meeting");
 const myVideo = document.createElement("video");
-const invitePop = document.getElementById("invitePop");
 myVideo.muted = true;
-
-
-
-myVideo.muted = true;
-
+const peers = {}
 var peer = new Peer(undefined, {
-  path: "/peerjs",
-  host: "/",
-  port: "3030",
-});
+  host: '/',
+  port: '3001'
+})
 
 let myVideoStream;
 
@@ -37,27 +32,34 @@ navigator.mediaDevices
       call.answer(stream);
       const video = document.createElement("video");
 
-      call.on("stream", (userVideoStream) => {
+      call.on("stream",(userVideoStream) => {
         addVideoStream(video, userVideoStream);
-        console.log(peers);
       });
     });
 
-    socket.on("user-connected", (userId) => {
-      connectToNewUser(userId, stream);
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.which === 13 && chatInputBox.value != "") {
-        socket.emit("message", chatInputBox.value);
+    socket.on('user-connected', userId => {
+      connectToNewUser(userId, stream)
+    })
+    socket.on('user-disconnected', userId => {
+      if (peers[userId]) peers[userId].close()
+    })
+    
+    leavemeeting.addEventListener('click', userId => {
+      if (peers[userId]) peers[userId].close();
+      window.location.href = '/';
+    })
+  
+    sendMsg.addEventListener("click", (e) => {
+      if ( chatInputBox.value != "") {
+        console.log("Emitted "+chatInputBox.value+" from "+userName)
+        socket.emit("message", {msg: chatInputBox.value,userName: userName});
         chatInputBox.value = "";
       }
     });
-
-    socket.on("createMessage", (msg) => {
-      console.log(msg);
+    socket.on("message", (data) => {
+      console.log(data.message);
       let li = document.createElement("li");
-      li.innerHTML = msg;
+      li.innerHTML = data.msg;
       all_messages.append(li);
       main__chat__window.scrollTop = main__chat__window.scrollHeight;
     });
@@ -79,21 +81,26 @@ peer.on("call", function (call) {
   );
 });
 
-peer.on("open", (id) => {
+peer.on("open", id => {
+  console.log("Peer opened here")
   socket.emit("join-room", ROOM_ID, id);
+  console.log("Emitted Join-room")
 });
 
 // CHAT
 
-const connectToNewUser = (userId, streams) => {
-  var call = peer.call(userId, streams);
-  console.log(call);
-  var video = document.createElement("video");
-  call.on("stream", (userVideoStream) => {
-    console.log(userVideoStream);
-    addVideoStream(video, userVideoStream);
-  });
-};
+function connectToNewUser(userId, stream) {
+  const call = myPeer.call(userId, stream)
+  const video = document.createElement('video')
+  call.on('stream', userVideoStream => {
+    addVideoStream(video, userVideoStream)
+  })
+  call.on('close', () => {
+    video.remove()
+  })
+
+  peers[userId] = call
+}
 
 const addVideoStream = (videoEl, stream) => {
   videoEl.srcObject = stream;
@@ -110,28 +117,6 @@ const addVideoStream = (videoEl, stream) => {
     }
   }
 };
-
-
-const showInvitePopup = () => {
-  invitePop.className+="show"
-
-  document.getElementById("roomLink").value = window.location.href;
-}
-const hideInvitePopup = () => {
-  invitePop.className +="hide"
-  invitePop.classList.remove("show")
-}
-const copyToClipboard = () => {
-  var copytext = document.getElementById("roomLink")
-  copytext.select();
-  copytext.setSelectionRange(0, 99999);
-  document.execCommand('copy')
-  alert("Copied "+copytext.value)
-  hideInvitePopup()
-}
-
-
-
 
 const playStop = () => {
   let enabled = myVideoStream.getVideoTracks()[0].enabled;
