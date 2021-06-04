@@ -1,93 +1,46 @@
-const socket = io("/");
-const chatInputBox = document.getElementById("chat_message");
-const all_messages = document.getElementById("all_messages");
-const main__chat__window = document.getElementById("main__chat__window");
-const videoGrid = document.getElementById("video-grid");
-const leavemeeting = document.getElementById("leave-meeting");
-const myVideo = document.createElement("video");
-myVideo.muted = true;
-const peers = {}
-var peer = new Peer(undefined, {
+const socket = io('/')
+const videoGrid = document.getElementById('video-grid')
+const myPeer = new Peer(undefined, {
   host: '/',
   port: '3001'
 })
-
+const myVideo = document.createElement('video')
+myVideo.muted = false
+myVideo.classList.add('border-b-4', 'border-green-600')
+const peers = {}
 let myVideoStream;
+navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: true
+}).then(stream => {
+  myVideoStream = stream;
+  addVideoStream(myVideo, stream)
 
-var getUserMedia =
-  navigator.getUserMedia ||
-  navigator.webkitGetUserMedia ||
-  navigator.mozGetUserMedia;
-
-navigator.mediaDevices
-  .getUserMedia({
-    video: true,
-    audio: true,
+  myPeer.on('call', call => {
+    call.answer(stream)
+    const video = document.createElement('video')
+    call.on('stream', userVideoStream => {
+      addVideoStream(video, userVideoStream)
+    })
   })
-  .then((stream) => {
-    myVideoStream = stream;
-    addVideoStream(myVideo, stream);
 
-    peer.on("call", (call) => {
-      call.answer(stream);
-      const video = document.createElement("video");
+  socket.on('user-connected', userId => {
+    connectToNewUser(userId, stream)
+  })
+})
 
-      call.on("stream",(userVideoStream) => {
-        addVideoStream(video, userVideoStream);
-      });
-    });
-
-    socket.on('user-connected', userId => {
-      connectToNewUser(userId, stream)
-    })
-    socket.on('user-disconnected', userId => {
-      if (peers[userId]) peers[userId].close()
-    })
-    
-    leavemeeting.addEventListener('click', userId => {
-      if (peers[userId]) peers[userId].close();
-      window.location.href = '/';
-    })
+socket.on('user-disconnected', userId => {
+  if (peers[userId]) peers[userId].close()
+})
+const leaveMeeting = document.getElementById('leave-meeting')
+leaveMeeting.addEventListener('click', userId => {
+  if (peers[userId]) peers[userId].close();
+  window.location.href = '/';
+})
+myPeer.on('open', id => {
+  socket.emit('join-room', ROOM_ID, id)
   
-    sendMsg.addEventListener("click", (e) => {
-      if ( chatInputBox.value != "") {
-        console.log("Emitted "+chatInputBox.value+" from "+userName)
-        socket.emit("message", {msg: chatInputBox.value,userName: userName});
-        chatInputBox.value = "";
-      }
-    });
-    socket.on("message", (data) => {
-      console.log(data.message);
-      let li = document.createElement("li");
-      li.innerHTML = data.msg;
-      all_messages.append(li);
-      main__chat__window.scrollTop = main__chat__window.scrollHeight;
-    });
-  });
-
-peer.on("call", function (call) {
-  getUserMedia(
-    { video: true, audio: true },
-    function (stream) {
-      call.answer(stream); // Answer the call with an A/V stream.
-      const video = document.createElement("video");
-      call.on("stream", function (remoteStream) {
-        addVideoStream(video, remoteStream);
-      });
-    },
-    function (err) {
-      console.log("Failed to get local stream", err);
-    }
-  );
-});
-
-peer.on("open", id => {
-  console.log("Peer opened here")
-  socket.emit("join-room", ROOM_ID, id);
-  console.log("Emitted Join-room")
-});
-
-// CHAT
+})
 
 function connectToNewUser(userId, stream) {
   const call = myPeer.call(userId, stream)
@@ -102,22 +55,13 @@ function connectToNewUser(userId, stream) {
   peers[userId] = call
 }
 
-const addVideoStream = (videoEl, stream) => {
-  videoEl.srcObject = stream;
-  videoEl.addEventListener("loadedmetadata", () => {
-    videoEl.play();
-  });
-
-  videoGrid.append(videoEl);
-  let totalUsers = document.getElementsByTagName("video").length;
-  if (totalUsers > 1) {
-    for (let index = 0; index < totalUsers; index++) {
-      document.getElementsByTagName("video")[index].style.width =
-        100 / totalUsers + "%";
-    }
-  }
-};
-
+function addVideoStream(video, stream) {
+  video.srcObject = stream
+  video.addEventListener('loadedmetadata', () => {
+    video.play()
+  })
+  videoGrid.append(video)
+}
 const playStop = () => {
   let enabled = myVideoStream.getVideoTracks()[0].enabled;
   if (enabled) {
@@ -143,12 +87,14 @@ const muteUnmute = () => {
 const setPlayVideo = () => {
   const html = `<i class="unmute fa fa-pause-circle"></i>
   <span class="unmute">Resume Video</span>`;
+  myVideo.classList.remove('border-b-4', 'border-green-600')
   document.getElementById("playPauseVideo").innerHTML = html;
 };
 
 const setStopVideo = () => {
   const html = `<i class=" fa fa-video-camera"></i>
   <span class="">Pause Video</span>`;
+  myVideo.classList.add('border-b-4', 'border-green-600')
   document.getElementById("playPauseVideo").innerHTML = html;
 };
 
@@ -162,3 +108,11 @@ const setMuteButton = () => {
   <span>Mute</span>`;
   document.getElementById("muteButton").innerHTML = html;
 };
+console.log();
+function invitePeople() {
+  var copyText = document.getElementById("room-id");
+  copyText.select();
+  copyText.setSelectionRange(0, 99999)
+  document.execCommand("copy");
+  alert("Room id Copied !");
+}

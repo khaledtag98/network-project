@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-    <title>Zoomify | Homepage</title>
+    <title>landing</title>
     <style>
         .app {
             width: 100vw;
@@ -16,42 +16,30 @@
             align-items: center;
         }
     </style>
-
+    
 </head>
 
 <body>
-    <div class="flex items-center justify-center w-screen h-screen">
+    <div class="flex w-screen h-screen justify-center items-center">
         <div class="text-center ">
-            <h1 class="mb-10 text-5xl font-medium text-blue-400">Welcome to Zoomfy</h1>
-            <input id="username" class="p-1 mb-4 border border-blue-400 rounded-sm outline-none" placeholder="Enter your username" type="text">
-            <a id="createRoom" class="block w-1/2 px-2 py-1 mx-auto mb-6 text-xl text-white bg-blue-400 rounded-sm cursor:pointer">Create Room</a>
-            <input id="copiedRoomId" class="p-1 border border-blue-400 rounded-sm outline-none" placeholder="Enter room ID" type="text">
-            <button class="px-3 py-1 ml-2 text-white bg-blue-400 rounded-sm" id="join">join</button>
+            <h1 class="mb-10 text-5xl  text-blue-400 font-medium">Welcome to Zoomfy</h1>
+            <a class="py-1 px-2 mx-auto w-1/2 bg-blue-400 text-xl text-white rounded-sm block mb-6" href="/createRoom">Create Room</a>
+            <input id="copiedRoomId" class="border border-blue-400 rounded-sm p-1 outline-none" type="text">
+            <button class="py-1 px-3 bg-blue-400 text-white rounded-sm ml-2" id="join">join</button>
         </div>
 
     </div>
     <script >
         const join = document.getElementById('join');
         const copiedRoomId = document.getElementById('copiedRoomId');
-        const username = document.getElementById('username');
-        const createRoom = document.getElementById('createRoom');
-
-        createRoom.addEventListener('click',() =>{
-            if(username.value != ""){
-                window.location.href = "createRoom/"+username.value
-            }else{
-                alert('Please enter your username')
-            }
-        })
+        
         join.addEventListener('click',() =>{
-            if (copiedRoomId.value != "" && username.value != "") {
+            if (copiedRoomId.value != "") {
                 window.location.href = copiedRoomId.value;
-            }else if(copiedRoomId.value=="")
-            alert('Please enter Room Id')
-            else if(username.value=="")
-            alert('Please enter your username')
+            }else alert("Please enter the room id")
+            
         })
     </script>
 </body>
 
-</html> 
+</html>
